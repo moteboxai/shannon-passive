@@ -177,10 +177,19 @@ export async function pentestPipelineWorkflow(
       // Step 2: Check exploitation queue (starts immediately after vuln)
       const decision = await a.checkExploitationQueue(activityInput, vulnType);
 
-      // Step 3: Conditionally run exploit agent
+      // Step 3: PASSIVE MODE - Skip exploit agent (production-safe)
+      // In passive mode, we report potential vulnerabilities without exploiting them.
+      // This makes the scanner safe for production environments but reduces accuracy
+      // (higher false positive rate since we don't prove exploitability).
       let exploitMetrics: AgentMetrics | null = null;
       if (decision.shouldExploit) {
-        exploitMetrics = await runExploitAgent();
+        // exploitMetrics = await runExploitAgent(); // DISABLED FOR PASSIVE MODE
+        // Instead of exploiting, log that we would have attempted exploitation
+        exploitMetrics = {
+          costUsd: 0,
+          numTurns: 0,
+          durationMs: 0,
+        };
       }
 
       return {
